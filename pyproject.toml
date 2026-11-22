@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vkcapture-consumer"
+version = "0.1.0"
+description = "Standalone OBS-free consumer for obs-vkcapture"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "User" }
+]
+dependencies = [
+    "numpy",
+    "opencv-python",
+]
+
+[project.scripts]
+vkcapture = "vkcapture_consumer.consumer:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

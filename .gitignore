@@ -1,0 +1,23 @@
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Python cache & build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Video clips & metadata manifests
+*.mp4
+*.json
+
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
