@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 680" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #0f1117; }
+      .title { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 700; font-size: 20px; fill: #f3f4f6; }
+      .subtitle { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; fill: #9ca3af; }
+      .box { fill: #1e222d; stroke: #374151; stroke-width: 2; rx: 8; }
+      .box-label { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; fill: #60a5fa; text-anchor: middle; }
+      .box-sub { font-family: 'Inter', sans-serif; font-size: 11px; fill: #9ca3af; text-anchor: middle; }
+      .lifeline { stroke: #374151; stroke-width: 2; stroke-dasharray: 4 4; }
+      .arrow { stroke: #3b82f6; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .arrow-ret { stroke: #10b981; stroke-width: 2; fill: none; marker-end: url(#arrowhead-green); }
+      .arrow-warn { stroke: #f59e0b; stroke-width: 2; fill: none; marker-end: url(#arrowhead-orange); }
+      .msg-text { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 12px; fill: #e5e7eb; }
+      .note-box { fill: #1f2937; stroke: #4b5563; stroke-width: 1.5; rx: 6; }
+      .note-text { font-family: 'Inter', sans-serif; font-size: 11px; fill: #d1d5db; }
+      .loop-box { fill: #1e1e38; fill-opacity: 0.4; stroke: #6366f1; stroke-width: 1.5; stroke-dasharray: 5 5; rx: 6; }
+      .loop-label { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700; fill: #818cf8; }
+    </style>
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#3b82f6" />
+    </marker>
+    <marker id="arrowhead-green" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#10b981" />
+    </marker>
+    <marker id="arrowhead-orange" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#f59e0b" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" class="bg" />
+
+  <!-- Header -->
+  <text x="450" y="38" text-anchor="middle" class="title">obs-vkcapture Protocol Handshake &amp; Capture Lifecycle</text>
+  <text x="450" y="58" text-anchor="middle" class="subtitle">Zero-copy pre-composition frame pipeline across abstract Unix domain socket</text>
+
+  <!-- Lifelines -->
+  <line x1="160" y1="120" x2="160" y2="640" class="lifeline" />
+  <line x1="450" y1="120" x2="450" y2="640" class="lifeline" />
+  <line x1="740" y1="120" x2="740" y2="640" class="lifeline" />
+
+  <!-- Entities Header Boxes -->
+  <rect x="70" y="80" width="180" height="48" class="box" />
+  <text x="160" y="100" class="box-label">Target Game Process</text>
+  <text x="160" y="116" class="box-sub">VkLayer_obs_vkcapture</text>
+
+  <rect x="350" y="80" width="200" height="48" class="box" />
+  <text x="450" y="100" class="box-label">Linux Kernel</text>
+  <text x="450" y="116" class="box-sub">DMA-BUF &amp; Abstract Socket</text>
+
+  <rect x="640" y="80" width="200" height="48" class="box" />
+  <text x="740" y="100" class="box-label">vkcapture-consumer</text>
+  <text x="740" y="116" class="box-sub">v14 Consumer Pipeline</text>
+
+  <!-- Step 1: Connect -->
+  <path d="M 160 160 L 730 160" class="arrow" />
+  <text x="450" y="152" text-anchor="middle" class="msg-text">1. Connect to abstract socket (/com/obsproject/vkcapture)</text>
+
+  <!-- Step 2: Client Data -->
+  <path d="M 160 195 L 730 195" class="arrow" />
+  <text x="450" y="187" text-anchor="middle" class="msg-text">2. CAPTURE_CLIENT_DATA (128B: type=10, exe_name)</text>
+
+  <!-- Step 3: Control Reply -->
+  <path d="M 740 235 L 170 235" class="arrow-ret" />
+  <text x="450" y="227" text-anchor="middle" class="msg-text">3. CAPTURE_CONTROL (32B: capturing=1, map_host=1, linear=1)</text>
+
+  <!-- Step 4: Texture Data + SCM_RIGHTS -->
+  <path d="M 160 275 L 730 275" class="arrow" />
+  <text x="450" y="267" text-anchor="middle" class="msg-text">4. CAPTURE_TEXTURE_DATA (128B) + SCM_RIGHTS (DMA-BUF FD)</text>
+
+  <!-- Step 5: mmap & Accept -->
+  <path d="M 740 305 L 460 305" class="arrow-ret" />
+  <text x="600" y="300" text-anchor="middle" class="msg-text">5. mmap(fd, PROT_READ)</text>
+  <rect x="640" y="320" width="200" height="32" class="note-box" />
+  <text x="740" y="340" text-anchor="middle" class="note-text">Client Accepted • rejects=0</text>
+
+  <!-- Loop: Frame Tick Execution -->
+  <rect x="90" y="370" width="720" height="195" class="loop-box" />
+  <text x="110" y="392" class="loop-label">LOOP [Every 1/poll_hz (e.g. 30 Hz)]</text>
+
+  <!-- Sync Start -->
+  <path d="M 740 420 L 460 420" class="arrow" />
+  <text x="600" y="414" text-anchor="middle" class="msg-text">ioctl(fd, DMA_BUF_SYNC_START)</text>
+
+  <!-- Buffer Read -->
+  <path d="M 740 455 L 460 455" class="arrow-ret" />
+  <text x="600" y="449" text-anchor="middle" class="msg-text">np.frombuffer(mm) -> (height, width, 4)</text>
+
+  <!-- Sync End -->
+  <path d="M 740 490 L 460 490" class="arrow" />
+  <text x="600" y="484" text-anchor="middle" class="msg-text">ioctl(fd, DMA_BUF_SYNC_END)</text>
+
+  <!-- Streak / Amnesty Note -->
+  <rect x="360" y="515" width="430" height="36" class="note-box" />
+  <text x="575" y="532" text-anchor="middle" class="note-text">If frame != None: healthy_streak_start armed (first frame)</text>
+  <text x="575" y="546" text-anchor="middle" class="note-text">If now - streak_start &gt;= 60s: Clear lifetime rejects (Amnesty)</text>
+
+  <!-- Trigger & Clip Write -->
+  <path d="M 740 595 L 850 595 L 850 625 L 745 625" class="arrow-warn" />
+  <text x="795" y="585" text-anchor="middle" class="msg-text">Motion Trigger &gt; threshold</text>
+  <text x="795" y="640" text-anchor="middle" class="note-text">Pipe ring buffer to FFmpeg -> clip.mp4</text>
+</svg>

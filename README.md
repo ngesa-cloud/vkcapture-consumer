@@ -6,6 +6,12 @@ Standalone OBS-free consumer for `obs-vkcapture`.
 
 ---
 
+## Wire Protocol & Handshake Lifecycle
+
+![Handshake Sequence](docs/handshake.svg)
+
+---
+
 ## Overview: Pre-Composition DMA-BUF Capture Path
 
 Unlike desktop scrapers (e.g. X11 xshmfence/XGetImage, PipeWire screen portals, or Wayland wlr-export-dmabuf) which capture post-composition desktop surfaces after GPU blending and display-server scaling:
@@ -60,6 +66,12 @@ Start the capture consumer in a terminal:
 vkcapture --out ~/clips --clip-len 15
 ```
 
+Or load a dedicated per-game TOML profile:
+
+```bash
+vkcapture --config profiles/gtavi.toml
+```
+
 Launch your Vulkan/OpenGL application with the capture layer injected:
 
 ```bash
@@ -71,12 +83,14 @@ obs-gamecapture ./your_game
 ### Options
 
 ```
-usage: vkcapture [-h] [--out OUT] [--exe EXE] [--clip-len CLIP_LEN]
-                 [--motion MOTION] [--refractory REFRACTORY]
-                 [--poll-hz POLL_HZ] [--connect-timeout CONNECT_TIMEOUT]
+usage: vkcapture [-h] [--config CONFIG] [--out OUT] [--exe EXE]
+                 [--clip-len CLIP_LEN] [--motion MOTION]
+                 [--refractory REFRACTORY] [--poll-hz POLL_HZ]
+                 [--connect-timeout CONNECT_TIMEOUT]
                  [--lifetime-cap LIFETIME_CAP] [--reset-window RESET_WINDOW]
 
 options:
+  --config CONFIG, -c CONFIG  Path to TOML configuration profile (e.g. profiles/gtavi.toml)
   --out OUT                   Output directory for clips (default: ~/clips)
   --exe EXE                   Optional substring filter for client executable path
   --clip-len CLIP_LEN         Clip duration in seconds (default: 20.0)
@@ -86,4 +100,16 @@ options:
   --connect-timeout TIMEOUT   Handshake deadline in seconds (default: 15.0)
   --lifetime-cap CAP          Cumulative reject ceiling before refusing client (default: 10)
   --reset-window WINDOW       Seconds of unbroken frame delivery to clear rejects (default: 60.0)
+```
+
+---
+
+## Testing
+
+Run the protocol integration test suite:
+
+```bash
+python3 -m unittest -v tests/test_protocol.py
+# Or with pytest:
+pytest -v tests/
 ```

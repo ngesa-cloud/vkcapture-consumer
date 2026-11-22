@@ -547,18 +547,79 @@ def analyzer_worker(q: queue.Queue, writer: ClipWriter, poll_hz: float,
                 collecting = None
 
 
+def load_config(path: Optional[str]) -> dict:
+    """Load configuration dictionary from a TOML file."""
+    if not path or not os.path.exists(path):
+        return {}
+    try:
+        try:
+            import tomllib
+            with open(path, "rb") as f:
+                data = tomllib.load(f)
+        except ModuleNotFoundError:
+            try:
+                import tomli as tomllib
+                with open(path, "rb") as f:
+                    data = tomllib.load(f)
+            except ModuleNotFoundError:
+                # Basic fallback parser for simple key = value profiles
+                data = {}
+                with open(path, "r", encoding="utf-8") as f:
+                    section = "consumer"
+                    for line in f:
+                        line = line.strip()
+                        if not line or line.startswith("#"):
+                            continue
+                        if line.startswith("[") and line.endswith("]"):
+                            section = line[1:-1].strip()
+                            continue
+                        if "=" in line:
+                            k, v = line.split("=", 1)
+                            k = k.strip().replace("-", "_")
+                            v = v.strip().strip('"').strip("'")
+                            if v.lower() in ("true", "false"):
+                                val = v.lower() == "true"
+                            else:
+                                try:
+                                    val = int(v) if v.isdigit() else float(v)
+                                except ValueError:
+                                    val = v
+                            data.setdefault(section, {})[k] = val
+        return data.get("consumer", data)
+    except Exception as e:
+        print(f"[!] Warning: Failed loading config from {path}: {e}")
+        return {}
+
+
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--out", default=os.path.expanduser("~/clips"))
-    ap.add_argument("--exe", default=None)
-    ap.add_argument("--clip-len", type=float, default=20.0)
-    ap.add_argument("--motion", type=float, default=0.1)
-    ap.add_argument("--refractory", type=float, default=15.0)
-    ap.add_argument("--poll-hz", type=float, default=30.0)
-    ap.add_argument("--connect-timeout", type=float, default=15.0)
-    ap.add_argument("--lifetime-cap", type=int, default=10,
+    pre_ap = argparse.ArgumentParser(add_help=False)
+    pre_ap.add_argument("--config", "-c", default=None,
+                        help="path to TOML configuration profile")
+    pre_args, _ = pre_ap.parse_known_args()
+
+    cfg = load_config(pre_args.config) if pre_args.config else {}
+
+    ap = argparse.ArgumentParser(
+        description="Standalone OBS-free consumer for obs-vkcapture",
+        parents=[pre_ap]
+    )
+    ap.add_argument("--out", default=cfg.get("out", os.path.expanduser("~/clips")),
+                    help="directory to save clips")
+    ap.add_argument("--exe", default=cfg.get("exe", None),
+                    help="substring filter for client executable path")
+    ap.add_argument("--clip-len", type=float, default=float(cfg.get("clip_len", cfg.get("clip-len", 20.0))),
+                    help="clip duration in seconds")
+    ap.add_argument("--motion", type=float, default=float(cfg.get("motion", 0.1)),
+                    help="mean pixel motion threshold to trigger clip")
+    ap.add_argument("--refractory", type=float, default=float(cfg.get("refractory", 15.0)),
+                    help="minimum seconds between triggers")
+    ap.add_argument("--poll-hz", type=float, default=float(cfg.get("poll_hz", cfg.get("poll-hz", 30.0))),
+                    help="frame polling frequency in Hz")
+    ap.add_argument("--connect-timeout", type=float, default=float(cfg.get("connect_timeout", cfg.get("connect-timeout", 15.0))),
+                    help="handshake deadline in seconds")
+    ap.add_argument("--lifetime-cap", type=int, default=int(cfg.get("lifetime_cap", cfg.get("lifetime-cap", 10))),
                     help="per-exe cumulative reject ceiling")
-    ap.add_argument("--reset-window", type=float, default=60.0,
+    ap.add_argument("--reset-window", type=float, default=float(cfg.get("reset_window", cfg.get("reset-window", 60.0))),
                     help="seconds of continuous frame delivery to fully clear the cap")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)

@@ -1,0 +1,11 @@
+# Profile: Grand Theft Auto VI
+[consumer]
+out = "~/clips/gtavi"
+exe = "gtavi.exe"
+clip_len = 15.0
+motion = 0.12
+refractory = 15.0
+poll_hz = 30.0
+connect_timeout = 15.0
+lifetime_cap = 10
+reset_window = 60.0
